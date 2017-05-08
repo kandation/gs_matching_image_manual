@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <title>ตามหาคน CPE</title>
+    
+    <style>
+    .box{
+    width:220;
+    float:left;
+    border:1px #000 solid;
+    margin:2px;
+    }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+      var listAll = new Array();
+      
+      var now_images = 0;
+      var now_select = "-1";
+      var before_select = "";
+      var allowcate = 0;
+      
+      //reserve sheet 
+        var time = getDate();
+        
+        google.script.run.withSuccessHandler(setAllowcate).rangeAllowcate(time);
+        console.log(allowcate);
+        
+      function onSuccess(list) {
+        
+        $('#inname').val(time);
+        //Start Catch data
+        listAll = list;
+        for(var i=0;i<list[0][0];i++){
+           showImg(list[0][1][i],list[0][2][i]);
+           //console.log(list[0][0]);
+        }
+        show(now_images);
+        $('#LoadStatus').hide();        
+        
+      }
+      
+      function setAllowcate(reserve){
+        allowcate = reserve;
+      }
+      
+      function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+      
+      function showImg(url, name){
+        var color_r = getRandomInt(180,255);
+        var color_g = getRandomInt(180,255);
+        var color_b = getRandomInt(180,255);
+        if(name.length > 0)
+          var name_sub = name.substring(0, name.length-4);
+        else
+          var name_sub = name;
+        //console.log(name_sub,name);
+        var hh = name.replace(" ","_");
+        $('#know_photos').append('<div class="box" style="background-color:rgb('+color_r+','+color_g+','+color_b+');">\
+        <img src="'+url+'" width="120" height="120"/ onclick=Aselector("'+hh+'");><div>'+name_sub+'</div></div>');        
+      }
+      
+      function reLoad(){
+      $('#know_photos').html("");
+      onSuccess(listAll);
+      }
+      
+      function Aselector(name){
+        before_select = now_select;
+        now_select = name;
+        sendToDatabase(now_images,allowcate, name);
+        $('#unknow_name_know').html(name);
+      }
+      
+      function show(now){
+        //This function for big photo
+        var url = listAll[1][1][now];
+        var name_sub = url.substring(0, url.length-4);
+        name_sub += "l440";
+        $('#unkonw_photos').html('<div class="box" style="background-color:#f2577b; float:center; width 100% !important">\
+        <img  src="'+name_sub+'" width="500px" height="500" onclick="photoCon();"><h1 style="color:#fff">ภาพใครอะ \"'+listAll[1][2][now]+'\"</h1>คุณเลือก <span id="unknow_name_know" style="color:#ffffdb;width:auto;"></span> คลิกที่ภาพนี้ เพื่อข้าม/ไปต่อ</div>');
+      }
+      
+      function photoCon(){
+         if(now_images+1 < listAll[1][0]){
+           now_images++;
+           show(now_images);
+         }else{
+            $('.thanks').show();
+          }
+      }
+      
+      function sendToDatabase(rowIndex, reserve_colIndex, name){
+       console.log(allowcate);
+        google.script.run.setChild_table(rowIndex, reserve_colIndex, name);
+      }
+      
+      function getDate(){
+        return new Date().getTime();
+      }
+
+
+      $(function() {
+      google.script.run.withSuccessHandler(onSuccess)
+          .main();
+          });
+    </script>
+  </head>
+  <body>
+    <button onclick="reLoad();">โหลดใหม่</button>
+    <div id="sender">ชื่อผู้ส่ง: <input id="inname" disabled type="text" value="จาวาลืมเติม"> &lt;&lt; เอาไว้เป็น header ตาราง </div>
+    <div id="lost">หากคิดว่ารายชื่อไม่ครบ ช่วยรบกวน<a href="https://docs.google.com/forms/d/1ExiyqzuCSd6GUppwyGkyhy6HNtGXwrrf0fbZLMvZBUY/edit" >เพิ่มให้หน่อยนะครับ</a>
+    <div class="thanks" style="display:none;font:40px bold tahoma;">ขอบคุณที่ช่วยหารูปครับ</div>
+    <small class"thanks" style="color:#ffffff">Open Source : </small>
+    <div id="unkonw_photos"></div>
+    <div id="know_photos">
+      <div id="LoadStatus">Loading..</div>
+    </div>
+  </body>
+</html>
